@@ -1,4 +1,4 @@
-// Final Corrected Version: June 18, 2025
+// Final Stable Version: June 18, 2025
 // Stuey's Seagull Son
 
 // Game objects
@@ -190,12 +190,32 @@ class Obstacle {
     this.x = width; this.w = 60; this.speed = 5; this.type = random() > 0.4 ? 'chimney' : 'crab';
     if (this.type === 'chimney') { let gap = height / 3.5; this.top = random(50, height - 50 - gap); this.bottom = height - this.top - gap; } else { this.h = 30; this.w = 40; this.y = random() > 0.5 ? 0 : height - this.h; }
   }
+  
+  // THIS IS THE NEW, STABLE COLLISION FUNCTION
   hits(player) {
-    let p_x = player.x + player.size/2; let p_y = player.y; let p_r = player.size/2;
-    if (this.type === 'chimney') { if (p_y - p_r < this.top || p_y + p_r > height - this.bottom) { if (p_x > this.x && p_x < this.x + this.w) { return true; } }
-    } else { if (p_x > this.x && p_x < this.x + this.w) { if ( (this.y === 0 && p_y - p_r < this.y + this.h) || (this.y !== 0 && p_y + p_r > this.y) ) { return true; } } }
-    return false;
+    const playerX = player.x;
+    const playerY = player.y - player.size / 2;
+    const playerW = player.size;
+    const playerH = player.size;
+
+    if (this.type === 'chimney') {
+      // Check collision with top pipe rectangle
+      if (playerX + playerW > this.x && playerX < this.x + this.w && playerY < this.top) {
+        return true;
+      }
+      // Check collision with bottom pipe rectangle
+      if (playerX + playerW > this.x && playerX < this.x + this.w && playerY + playerH > height - this.bottom) {
+        return true;
+      }
+    } else { // It's a crab
+      // Check collision with the single crab rectangle
+      if (playerX + playerW > this.x && playerX < this.x + this.w && playerY + playerH > this.y && playerY < this.y + this.h) {
+        return true;
+      }
+    }
+    return false; // No collision
   }
+
   update() { this.x -= this.speed; }
   display() {
     if (this.type === 'chimney') { image(obstacleSprite, this.x, 0, this.w, this.top); image(obstacleSprite, this.x, height - this.bottom, this.w, this.bottom); } else { image(crabSprite, this.x, this.y, this.w, this.h); }
@@ -206,21 +226,15 @@ class Obstacle {
 class PowerUp {
   constructor() { this.x = width; this.w = 25; this.h = 35; this.speed = 5; this.y = random(height * 0.2, height * 0.8); }
   
-  // THIS IS THE CORRECTED FUNCTION
   hits(player) {
-    // Get the bounding box of the player
     let playerX = player.x;
     let playerY = player.y - player.size / 2;
-    let playerSize = player.size; // Assuming square hitbox for simplicity
-
-    // Check for overlap between the player's box and the power-up's box
-    if (playerX < this.x + this.w &&
-        playerX + playerSize > this.x &&
-        playerY < this.y + this.h &&
-        playerY + playerSize > this.y) {
-      return true; // Collision detected
+    let playerSize = player.size;
+    // Check for collision between two rectangles
+    if (playerX < this.x + this.w && playerX + playerSize > this.x && playerY < this.y + this.h && playerY + playerSize > this.y) {
+      return true;
     }
-    return false; // No collision
+    return false;
   }
 
   update() { this.x -= this.speed; }
