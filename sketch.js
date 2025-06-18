@@ -1,4 +1,4 @@
-// Final Version: June 18, 2025
+// Final Corrected Version: June 18, 2025
 // Stuey's Seagull Son
 
 // Game objects
@@ -10,7 +10,7 @@ let powerups = [];
 let score = 0;
 let highScore = 0;
 let gameState = 'start';
-let gameOverSoundPlayed = false; // Fixes the sound timing issue
+let gameOverSoundPlayed = false;
 
 // Assets
 let seagullSprite, obstacleSprite, crabSprite, frySprite;
@@ -59,7 +59,6 @@ function draw() {
   } else if (gameState === 'playing') {
     runGame();
   } else if (gameState === 'gameOver') {
-    // This new logic ensures the sound plays correctly
     if (!gameOverSoundPlayed) {
       if (squawkSound.isLoaded()) {
         squawkSound.play();
@@ -110,7 +109,6 @@ function runGame() {
   drawScore();
 }
 
-// endGame is now simpler, it just changes the state
 function endGame() {
   gameState = 'gameOver';
   if (score > highScore) {
@@ -119,7 +117,6 @@ function endGame() {
   }
 }
 
-// Handles all user input (touch and keyboard)
 function handleInput() {
   if (getAudioContext().state !== 'running') {
     getAudioContext().resume();
@@ -135,7 +132,6 @@ function keyPressed() { if (key === ' ') { handleInput(); } }
 function touchStarted() { handleInput(); return false; }
 function windowResized() { resizeCanvas(windowWidth, windowHeight); }
 
-// Resets the game to its starting state
 function resetGame() {
   if (bgMusic.isLoaded() && !bgMusic.isPlaying()) {
     bgMusic.loop();
@@ -143,12 +139,10 @@ function resetGame() {
   obstacles = [];
   powerups = [];
   score = 0;
-  gameOverSoundPlayed = false; // Reset the flag for the next game
+  gameOverSoundPlayed = false;
   player = new Player();
   gameState = 'playing';
 }
-
-// --- Drawing Functions for Screens and UI ---
 
 function drawStartScreen() {
   textAlign(CENTER, CENTER);
@@ -179,14 +173,10 @@ function drawScore() {
   text(`High Score: ${highScore}`, width - 20, 20);
 }
 
-// --- Functions to Draw Pixel Art ---
-
 function drawSeagull(pg, frame) { pg.background(0,0,0,0); pg.noStroke(); pg.fill(220); pg.rect(10, 10, 20, 10); pg.rect(30, 5, 10, 10); pg.fill(255, 200, 0); pg.rect(40, 8, 5, 4); pg.fill(0); pg.rect(32, 7, 2, 2); pg.fill(200); if (floor(frame / 10) % 2 === 0) { pg.rect(5, 0, 15, 8); } else { pg.rect(5, 12, 15, 8); } }
 function drawObstacle(pg) { pg.background(0,0,0,0); pg.fill(139, 69, 19); pg.rect(0, 0, 50, 100); pg.fill(105, 105, 105); pg.rect(0, 0, 50, 10); }
 function drawCrab(pg) { pg.background(0,0,0,0); pg.noStroke(); pg.fill(255, 69, 0); pg.ellipse(20, 20, 30, 20); pg.fill(0); pg.ellipse(15, 15, 5, 5); pg.ellipse(25, 15, 5, 5); pg.rect(5, 10, 5, 10); pg.rect(30, 10, 5, 10); }
 function drawFry(pg) { pg.background(0,0,0,0); pg.noStroke(); pg.fill(255, 223, 0); for (let i = 0; i < 5; i++) { pg.rect(i * 5, 5 + random(-5, 5), 4, 30); } }
-
-// --- Game Object Classes ---
 
 class Player {
   constructor() { this.x = width / 4; this.y = height / 2; this.gravity = 0.6; this.lift = -15; this.velocity = 0; this.size = 30; }
@@ -215,7 +205,24 @@ class Obstacle {
 
 class PowerUp {
   constructor() { this.x = width; this.w = 25; this.h = 35; this.speed = 5; this.y = random(height * 0.2, height * 0.8); }
-  hits(player) { return collideRectRect(player.x, player.y - player.size/2, player.size, player.size, this.x, this.y, this.w, this.h); }
+  
+  // THIS IS THE CORRECTED FUNCTION
+  hits(player) {
+    // Get the bounding box of the player
+    let playerX = player.x;
+    let playerY = player.y - player.size / 2;
+    let playerSize = player.size; // Assuming square hitbox for simplicity
+
+    // Check for overlap between the player's box and the power-up's box
+    if (playerX < this.x + this.w &&
+        playerX + playerSize > this.x &&
+        playerY < this.y + this.h &&
+        playerY + playerSize > this.y) {
+      return true; // Collision detected
+    }
+    return false; // No collision
+  }
+
   update() { this.x -= this.speed; }
   display() { image(frySprite, this.x, this.y, this.w, this.h); }
   offscreen() { return this.x < -this.w; }
